@@ -49,36 +49,32 @@ const Customizer = () => {
   }
 
   const handleSubmit = async (type) => {
-    if(!prompt) return alert("Please Enter Prompt");
-
-
+    if (!prompt) return alert("Please enter a prompt.");
+  
     try {
       setGeneratingImg(true);
-
-      const response = await fetch('http://localhost:8080/api/v1/dalle', {
+  
+      const response = await fetch('https://threed-ai-project-6akl.onrender.com/api/v1/dalle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          prompt,
-        })
-      })
-
+        body: JSON.stringify({ prompt })
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to generate image. Please try again.");
+      }
+  
       const data = await response.json();
-     
-      console.log(data)
-
-      handleDecals(type, `data:image/png;base64,${data.photo}`)
-
+      handleDecals(type, `data:image/png;base64,${data.photo}`);
     } catch (error) {
-      alert(error)
-    }finally{
-      setGeneratingImg(false)
-      setActiveEditorTab("")
+      alert(error.message);
+    } finally {
+      setGeneratingImg(false);
+      setActiveEditorTab("");
     }
-  }
-
+  };
 
   const handleDecals = (type, result) => {
     const decalType = DecalTypes[type];
@@ -113,12 +109,22 @@ const Customizer = () => {
   }
 
   const readFile = (type) => {
-    reader(file)
-      .then((result) => {
-        handleDecals(type, result);
-        setActiveEditorTab("");
-    })
-  }
+    if (file instanceof Blob) {
+      reader(file)
+        .then((result) => {
+          handleDecals(type, result);
+          setActiveEditorTab("");
+        })
+        .catch((error) => {
+          console.error("Error reading file:", error);
+          alert("Failed to read the file. Please try again.");
+        });
+    } else {
+      console.error("Invalid file type:", file);
+      alert("Please select a valid file.");
+    }
+  };
+
 
   return (
     <AnimatePresence>
